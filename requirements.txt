@@ -1,0 +1,9 @@
+kivy
+git+https://github.com/dolfies/discord.py-self.git
+cryptography
+Pillow
+requests
+pyvips
+BeautifulSoup4
+g4f
+Brotli
