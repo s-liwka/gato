@@ -473,6 +473,19 @@ async def clean_error(ctx, error):
         await ctx.send("Invalid syntax. Usage: `clean <amount>`", delete_after=5.0)
 
 
+
+# clear
+@bot.command()
+async def clear(ctx, count: int):
+    await ctx.message.delete()
+    messages_deleted = 0
+    async for message in ctx.channel.history(limit=None):
+        await message.delete()
+        messages_deleted += 1
+        if messages_deleted == count:
+            break
+
+
 # gpt 
 @bot.command()
 async def gpt(ctx, *prompt):
