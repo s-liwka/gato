@@ -75,7 +75,7 @@ class Tab(TabbedPanel):
             encrypted_token = modules.token_tools.encrypt_token(self.ids.tkti.text.encode('utf-8'))
             print('not encrypted')
 
-        decrypted_token = decrypted_token.replace('"', '')
+        decrypted_token = decrypted_token.decode('utf-8').replace('"', '')
 
         token_check = modules.token_tools.validate(decrypted_token)
         
