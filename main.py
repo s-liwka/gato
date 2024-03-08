@@ -35,10 +35,12 @@ class Tab(TabbedPanel):
         self.update_console_thread = Thread(target=self.update_console)
         self.update_console_thread.daemon = True
         self.update_console_thread.start()
-        self.config = self.load_config()
 
 
     def on_kv_post(self, base_widget):
+
+        self.config = self.load_config()
+
         if 'logger' in self.config:
             self.ids.msglgrcb.active = self.config['logger']
         if 'sniper' in self.config:
