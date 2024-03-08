@@ -11,6 +11,7 @@ import shutil
 import platform
 import tempfile
 import g4f
+import asyncio
 
 import modules.captions
 import modules.speechbubble
@@ -38,19 +39,33 @@ def load_config():
     if not os.path.exists(os.path.join(config_dir, 'sounds')):
         os.makedirs(os.path.join(config_dir, 'sounds'), exist_ok=True)
 
+    default_config = {
+        "logger": False,
+        "sniper": False,
+        "profanity": False,
+        "prompt_destructive": True,
+        "delete_after_time": 5.0,
+        "prefix": ";",
+        "token": ""
+    }
+
     # config
     if not os.path.exists(config_file):
-        default_config = {
-            "logger": False,
-            "sniper": False,
-            "profanity": False,
-            "prefix": ";",
-            "token": ""
-        }
-
         os.makedirs(config_dir, exist_ok=True)
         with open(config_file, 'w') as f:
             json.dump(default_config, f)
+
+    else:
+        # add keys if new options are added
+        with open(config_file, 'r') as f:
+            config = json.load(f)
+
+        for key, value in default_config.items():
+            if key not in config:
+                config[key] = value
+
+        with open(config_file, 'w') as f:
+            json.dump(config, f)
 
     with open(config_file, 'r') as f:
         config = json.load(f)
@@ -82,7 +97,7 @@ class SliwkaSelfBot(commands.Bot):
 
 
     async def on_ready(self):
-        print(f'haii!! {self.user} is weady!!! :3')
+        print(f'haii!! {self.user} is weady!!! :3 meow')
         self.queue.put(f'[SUCCESS] Logged in as {self.user}')
 
 
@@ -145,11 +160,35 @@ config, log = load_config()
 bot = SliwkaSelfBot(command_prefix=config['prefix'], self_bot=True, queue=None)
 
 
+async def confirm_destructive_action(ctx):
+    try:
+        prompt_message = await ctx.reply('**! DESTRUCTIVE ACTION !**\n\nReply with **"y"** to confirm. **"n"** to cancel.')
+        reply = await bot.wait_for('message', timeout=15, check=lambda m: m.author == ctx.author)
+        
+        if reply.content.lower() == 'y':
+            await prompt_message.delete()
+            await ctx.reply('Confirmed.', delete_after=config['delete_after_time'])
+            return True
+        elif reply.content.lower() == 'n':
+            await prompt_message.delete()
+            await ctx.reply('Cancelled.', delete_after=config['delete_after_time'])
+            return False
+        else:
+            await prompt_message.delete()
+            await ctx.reply('Invalid selection. Cancelled.', delete_after=config['delete_after_time'])
+            return False
+
+    except asyncio.TimeoutError:
+        await prompt_message.delete()
+        await ctx.reply("You didn't reply in time.", delete_after=config['delete_after_time'])
+        return False
+
+
 @bot.command()
 async def ping(ctx):
     try:
         latency = bot.latency * 1000
-        await ctx.reply(f'Pong! **{latency:.0f}ms**')
+        await ctx.reply(f'Pong! **{latency:.0f}ms**', delete_after=None)
         bot.queue.put(f'[INFO] Latency: {latency:.0f}ms')
     
     except Exception as e:
@@ -190,7 +229,7 @@ async def ddg(ctx, query: str=None):
             if query is not None:
                 await ctx.message.edit(f'https://duckduckgo.com/{query}')
             else:
-                await ctx.reply('Invalid syntax. ddg [query] or respond to a message with ddg', delete_after=5.0)
+                await ctx.reply('Invalid syntax. ddg [query] or respond to a message with ddg', delete_after=config['delete_after_time'])
                 await ctx.message.remove()
                 bot.queue.put("[ERR] Command DDG: Invalid syntax: No query/reference message")
         
@@ -235,7 +274,7 @@ async def s(ctx):
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] S command raised an exception: {e}")
+        bot.queue.put(f"[ERR] Snipe command raised an exception: {e}")
 
 
 @bot.command()
@@ -243,7 +282,7 @@ async def calc(ctx, equation: str):
     bot.queue.put("[INFO] Command calc called")
     try:
         if len(equation) > 15:
-            await ctx.reply('Equation too long', delete_after=5.0)
+            await ctx.reply('Equation too long', delete_after=config['delete_after_time'])
             return
         await ctx.message.edit(f"{ctx.message.content.replace('.calc ', '')} = {eval(equation)}")
         bot.queue.put("[INFO] Command calc successful")
@@ -330,7 +369,7 @@ async def speechbubble(ctx):
 
 @bot.command()
 async def togif(ctx):
-    bot.queue.put("[DEBUG] Command togif called")
+    bot.queue.put("[INFO] Command togif called")
     try:
         path = await modules.attachments.download_attachment(ctx.message, bot.queue) 
 
@@ -345,37 +384,44 @@ async def togif(ctx):
 
 
     except Exception as e:
-        await ctx.reply(e, delete_after=5.0)
+        await ctx.reply(f'[ERR]: {e}', delete_after=config['delete_after_time'])
         bot.queue.put(f'[ERR] Command togif raised an exception: {e}')
 
 
 # mass create
 @bot.command()
 async def masscreate(ctx, name, times):
-    bot.queue.put("[DEBUG] Command masscreate called")
-    await ctx.message.delete()
-
+    bot.queue.put(f"[INFO] Command masscreate called. Name: {name}, {times} times")
     try:
-        times = int(times)
-    except:
-        bot.queue.put("[ERR] Command masscreate: Invalid syntax: times is not int")
-        await ctx.send("Invalid syntax. Usage: `masscreate <name> <times>`", delete_after=5.0)
-        return
-    
-    if ctx.message.guild is None:
-        bot.queue.put("[ERR] Command masscreate: Not a guild")
-        await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=5.0)
-        return
 
-    for i in range (0, times):
-        await ctx.guild.create_text_channel(name)
-    
-    bot.queue.put("[INFO] Command masscreate successful")
+        try:
+            times = int(times)
+        except:
+            bot.queue.put("[ERR] Command masscreate: Invalid syntax: times is not int")
+            await ctx.send("Invalid syntax. Usage: `masscreate <name> <times>`", delete_after=config['delete_after_time'])
+            return
+        
+        if ctx.message.guild is None:
+            bot.queue.put("[ERR] Command masscreate: Not a guild")
+            await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
+            return
+
+        for i in range (0, times):
+            await ctx.guild.create_text_channel(name)
+        
+        await ctx.message.delete()
+
+        bot.queue.put("[INFO] Command masscreate successful")
+
+    except Exception as e:
+        await ctx.channel.delete()
+        await ctx.send(f'[ERR]: {e}')
+        bot.queue.put(f'[ERR] Command masscreate raised an exception: {e}')
 
 @masscreate.error
 async def masscreate_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("Invalid syntax. Usage: `masscreate <name> <times>`", delete_after=5.0)
+        await ctx.send("Invalid syntax. Usage: `masscreate <name> <times>`", delete_after=config['delete_after_time'])
         
 
 # massdelete
@@ -386,7 +432,7 @@ async def massdelete(ctx, name):
 
     if ctx.message.guild is None:
         bot.queue.put("[ERR] Command massdelete: Failure: Not a guild")
-        await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=5.0)
+        await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
         return
 
     for channel in ctx.guild.channels:
@@ -398,29 +444,42 @@ async def massdelete(ctx, name):
 @massdelete.error
 async def massdelete_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("Invalid syntax. Usage: `massdelete <name>`", delete_after=5.0)
+        await ctx.send("Invalid syntax. Usage: `massdelete <name>`", delete_after=config['delete_after_time'])
 
 
 #niuk
 @bot.command()
 async def nuke(ctx):
-    await ctx.message.delete()
+    try:
 
-    if ctx.message.guild is None:
-        await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=5.0)
-        return
+        if config.get('prompt_for_destructive', True):
+            if not await confirm_destructive_action(ctx):
+                await ctx.message.delete()
+                return
 
-    info = {
-        'name': ctx.channel.name,
-        'topic': ctx.channel.topic,
-        'category': ctx.channel.category,
-        'nsfw': ctx.channel.nsfw,
-        'slowmode_delay': ctx.channel.slowmode_delay,
-        'position': ctx.channel.position
-    }
-    
-    await ctx.channel.delete()
-    await ctx.guild.create_text_channel(name=info['name'], category=info['category'], topic=info['topic'], nsfw=info['nsfw'], position=info['position'], slowmode_delay=info['slowmode_delay'])
+        if ctx.message.guild is None:
+            await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
+            return
+
+        info = {
+            'name': ctx.channel.name,
+            'topic': ctx.channel.topic,
+            'category': ctx.channel.category,
+            'nsfw': ctx.channel.nsfw,
+            'slowmode_delay': ctx.channel.slowmode_delay,
+            'position': ctx.channel.position
+        }
+        
+        await ctx.channel.delete()
+        await ctx.guild.create_text_channel(name=info['name'], category=info['category'], topic=info['topic'], nsfw=info['nsfw'], position=info['position'], slowmode_delay=info['slowmode_delay'])
+
+    except Exception as e:
+        await ctx.channel.delete()
+        await ctx.send(f'[ERR]: {e}')
+        bot.queue.put(f'[ERR] Command nuke raised an exception: {e}')
+        
+
+
 
 #konwerszyn
 @bot.command()
@@ -458,33 +517,111 @@ async def convert(ctx, number, unit_from, unit_to):
 # clean
 @bot.command()
 async def clean(ctx, count: int):
-    await ctx.message.delete()
-    messages_deleted = 0
-    async for message in ctx.channel.history(limit=None):
-        if message.author == ctx.message.author:
-            await message.delete()
-            messages_deleted += 1
-            if messages_deleted == count:
-                break 
+    try:
+        await ctx.message.delete()
+        messages_deleted = 0
+        async for message in ctx.channel.history(limit=None):
+            if message.author == ctx.message.author:
+                await message.delete()
+                messages_deleted += 1
+                if messages_deleted == count:
+                    break
+
+        await ctx.send(f'Deleted {count} messages sent by myself.')
+        bot.queue.put('[INFO] Command clean successful')
+
+    except Exception as e:
+        await ctx.send(f'[ERR]: {e}')
+        bot.queue.put(f'[ERR] Command clean raised an exception: {e}')
+        
 
 @clean.error
 async def clean_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("Invalid syntax. Usage: `clean <amount>`", delete_after=5.0)
+        await ctx.send("Invalid syntax. Usage: `clean <amount>`", delete_after=config['delete_after_time'])
 
 
+# server utils
 
 # clear
 @bot.command()
 async def clear(ctx, count: int):
-    await ctx.message.delete()
-    messages_deleted = 0
-    async for message in ctx.channel.history(limit=None):
-        await message.delete()
-        messages_deleted += 1
-        if messages_deleted == count:
-            break
+    bot.queue.put('[INFO] Command clear called')
+    try:
+        await ctx.message.delete()
+        messages_deleted = 0
+        async for message in ctx.channel.history(limit=None):
+            await message.delete()
+            messages_deleted += 1
+            if messages_deleted == count:
+                break
+        
+        await ctx.send(f'Deleted {count} messages.')
+        bot.queue.put('[INFO] Command clear successful')
 
+    except Exception as e:
+        await ctx.send(f'[ERR]: {e}')
+        bot.queue.put(f'[ERR] Command clear raised an exception: {e}')
+        
+
+@clear.error
+async def clear_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Invalid syntax. Usage: `clean <amount>`", delete_after=config['delete_after_time'])
+
+
+# roles
+
+@bot.command()
+async def roles(ctx, action, member, role):
+    try:
+        bot.queue.put(f'[INFO] Command roles called. Arguments: Action: {action} | Member: {member} | Role: {role}')
+
+        if role.isdigit():
+            role = ctx.guild.get_role(int(role))
+        else:
+            role = discord.utils.get(ctx.guild.roles, name=role)
+
+        if action == 'give':
+            if member == '@everyone':
+                if config.get('prompt_for_destructive', True):
+                    if not await confirm_destructive_action(ctx):
+                        await ctx.message.delete()
+                        return
+
+                for m in ctx.guild.members:
+                    await m.add_roles(role)
+                await ctx.send(f"Gave everyone the role **{role.name}**", delete_after=config['delete_after_time'])
+
+            elif member is not None:
+                member = await commands.MemberConverter().convert(ctx, member)
+                await member.add_roles(role)
+                await ctx.send(f"Gave {member} the role **{role.name}**", delete_after=config['delete_after_time'])
+            else:
+                await ctx.reply(f"Invalid member {member}")
+
+        elif action == 'take':
+            if member == '@everyone':
+                if config.get('prompt_for_destructive', True):
+                    if not await confirm_destructive_action(ctx):
+                        await ctx.message.delete()
+                        return
+
+                for m in ctx.guild.members:
+                    await m.remove_roles(role)
+
+                await ctx.send(f"Removed the role **{role.name}** from everyone", delete_after=config['delete_after_time'])
+            elif member is not None:
+                member = await commands.MemberConverter().convert(ctx, member)
+                await member.remove_roles(role)
+                await ctx.send(f"Removed the role {role.name} from {member}", delete_after=config['delete_after_time'])
+            else:
+                await ctx.reply(f"Invalid member {member}")
+            
+        await ctx.message.delete()
+
+    except Exception as e:
+        bot.queue.put(f'[ERR] Command roles raised an exception: {e}')
 
 # gpt 
 @bot.command()
@@ -530,7 +667,7 @@ async def gpt(ctx, *prompt):
                     return       
 
             except:
-                await ctx.reply('Invalid syntax. Context window must be a number.', delete_after=5.0)
+                await ctx.reply('Invalid syntax. Context window must be a number.', delete_after=config['delete_after_time'])
                 await ctx.message.delete()
                 bot.queue.put(f'[ERR] Command GPT: Invalid syntax. Context window must be a number.')
                 return
@@ -550,7 +687,7 @@ async def gpt(ctx, *prompt):
                         break
         
         if not found:
-            await ctx.reply(f'[ERR] Provider "{provider}" either doesnt exist or isnt working', delete_after=5.0)
+            await ctx.reply(f'[ERR] Provider "{provider}" either doesnt exist or isnt working', delete_after=config['delete_after_time'])
             await ctx.message.delete()
             bot.queue.put(f'[ERR] Command GPT: Provider "{provider}" either doesnt exist or isnt working')
             return
@@ -568,12 +705,12 @@ async def gpt(ctx, *prompt):
             bot.queue.put(f"[INFO] Command GPT successful")
 
         except Exception as e:
-            await ctx.reply(f'[ERR] Exception while generating an response: {e}', delete_after=5.0)
+            await ctx.reply(f'[ERR] Exception while generating an response: {e}', delete_after=config['delete_after_time'])
             await ctx.message.delete()
             bot.queue.put(f'[ERR] Command GPT: Generating response: {e}')
             
     except Exception as e:
-        await ctx.reply(f'[ERR]: {e}', delete_after=5.0)
+        await ctx.reply(f'[ERR]: {e}', delete_after=config['delete_after_time'])
         await ctx.message.delete()
         bot.queue.put(f'[ERR] Command GPT: {e}')
 

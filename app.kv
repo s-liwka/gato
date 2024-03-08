@@ -6,6 +6,7 @@
     # Create tab 1 
     TabbedPanelItem: 
         text: 'Home'
+        # floating layout that definietly wont break when fullscreened
         FloatLayout:
 
             ScrollView:
@@ -63,11 +64,19 @@
                 text: "Nitro Sniper"
 
             CheckBox:
-                id: prlgrcb
+                id: prcb
             Label:
                 text: "Profanity Tracker (does nothing atm)"
+        
+            CheckBox:
+                id: dacb
+            Label:
+                text: "Prompt for destructive actions"
 
-
+            TextInput:
+                id: dati
+            Label:
+                text: "Message delete time (MUST BE A NUMBER OR EMPTY)"
 
             TextInput:
                 id: prti

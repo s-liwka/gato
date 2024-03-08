@@ -41,6 +41,10 @@ class Tab(TabbedPanel):
             self.ids.msglgrcb.active = self.config['logger']
         if 'sniper' in self.config:
             self.ids.sncb.active = self.config['sniper']
+        if 'profanity' in self.config:
+            self.ids.prcb.active = self.config['profanity']
+        if 'delete_after_time' in self.config:
+            self.ids.dati.text = str(self.config['delete_after_time'])
         if 'prefix' in self.config:
             self.ids.prti.text = self.config['prefix']
         if 'token' in self.config:
@@ -94,10 +98,14 @@ class Tab(TabbedPanel):
                         content=content_layout,
                         size_hint=(None, None), size=(400, 400))
             popup.open()
+      
                 
         self.config = {
             'logger': self.ids.msglgrcb.active,
             'sniper': self.ids.sncb.active,
+            'profanity': self.ids.prcb.active,
+            'prompt_destructive': self.ids.dacb.active,
+            'delete_after_time': float(self.ids.dati.text) if self.ids.dati.text else None,
             'prefix': self.ids.prti.text,
             'token': encrypted_token.decode('utf-8'),
         }
@@ -165,7 +173,7 @@ class Tab(TabbedPanel):
 
 class MyApp(App):
     def build(self):
-        self.title = "Sliwka's selfbot"
+        self.title = "Gato!"
         return Tab()
 
 

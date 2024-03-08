@@ -7,11 +7,11 @@ tmp = tempfile.gettempdir()
 def get_config_file_dir():
     if platform.system() == 'Linux':
         if os.environ.get('ANDROID_ROOT') is None:
-            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'sliwkas-selfbot')  
+            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'gato')  
         else:
-            config_dir = os.path.join(os.getenv("EXTERNAL_STORAGE"), 'sliwkas-selfbot')
+            config_dir = os.path.join(os.getenv("EXTERNAL_STORAGE"), 'gato')
     elif platform.system() == 'Windows':
-        config_dir = os.path.join(os.environ['LOCALAPPDATA'], 'sliwkas-selfbot')
+        config_dir = os.path.join(os.environ['LOCALAPPDATA'], 'gato')
     else:
         print(f'Unsupported platform {platform.system()}')
         exit()

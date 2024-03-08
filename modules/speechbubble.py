@@ -1,5 +1,4 @@
 import os
-import pyvips
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 import shutil
 import tempfile
