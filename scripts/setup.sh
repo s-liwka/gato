@@ -10,6 +10,6 @@ cp scripts/gato-cli.sh /usr/local/bin/gato-cli
 cp scripts/gato.sh /usr/local/bin/gato
 cp scripts/gato-update.sh /usr/local/bin/gato-update
 chmod +x /usr/local/bin/gato-update
-chmod +x /usr/local/bin/gato
+chmod +x /usr/local/bin/gato-gui
 chmod +x /usr/local/bin/gato-cli
 echo "INSTALL LIBVIPS BEFORE RUNNING!!"
