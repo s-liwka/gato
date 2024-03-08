@@ -12,6 +12,7 @@ import platform
 import tempfile
 import g4f
 import asyncio
+from cryptography.fernet import Fernet
 
 import modules.captions
 import modules.speechbubble

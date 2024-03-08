@@ -121,7 +121,7 @@ class Tab(TabbedPanel):
     
     def start_bot(self):
         self.config = self.load_config()
-        self.ids.console.text = "[INFO] Starting selfbot...\n"
+        self.ids.console.text = "[INFO] Starting gato...\n"
         self.ids.console.text += "[INFO] Validating token...\n"
 
         token = modules.token_tools.decrypt_token(self.config['token'])
