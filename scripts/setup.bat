@@ -8,18 +8,11 @@ cd gato
 python -m venv .venv
 call ".venv\Scripts\activate.bat"
 
-pip install -r requirements.txt
-
-deactivate
+pip install -r 'requirements.txt'
 
 set SCRIPT="C:\Program Files\gato\scripts\gato-gui.bat"
 set SHORTCUT="%USERPROFILE%\Desktop\Gato.lnk"
-set WScriptShell=WScript.CreateObject("WScript.Shell")
-set Shortcut=WScriptShell.CreateShortcut(SHORTCUT)
-Shortcut.TargetPath=SCRIPT
-Shortcut.WorkingDirectory="C:\Program Files\gato"
-Shortcut.IconLocation="C:\Program Files\gato\resources\gato_pelon.ico"
-Shortcut.Save
+cscript //nologo "C:\Program Files\gato\scripts\create-shortcut.vbs" "%SHORTCUT%" "%SCRIPT%" "C:\Program Files\gato" "C:\Program Files\gato\resources\gato_pelon.ico"
 
 echo ####################################
 echo #      GATO SETUP SUCCESSFUL       #
