@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 deactivate
 
-set SCRIPT="C:\Program Files\gato-gui.bat"
+set SCRIPT="C:\Program Files\gato\scripts\gato-gui.bat"
 set SHORTCUT="%USERPROFILE%\Desktop\Gato.lnk"
 set WScriptShell=WScript.CreateObject("WScript.Shell")
 set Shortcut=WScriptShell.CreateShortcut(SHORTCUT)
@@ -21,5 +21,7 @@ Shortcut.WorkingDirectory="C:\Program Files\gato"
 Shortcut.IconLocation="C:\Program Files\gato\resources\gato_pelon.ico"
 Shortcut.Save
 
-echo Setup completed successfully.
+echo ####################################
+echo #      GATO SETUP SUCCESSFUL       #
+echo ####################################
 pause
