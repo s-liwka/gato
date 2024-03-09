@@ -5,11 +5,9 @@ An utility selfbot for Discord!
 ## Installation
 
 ### Binaries
-Prerequisites: libvips
+[Prerequisites: libvips](https://github.com/s-liwka/gato/wiki/Installing-libvips-on-Windows)
 
 Binaries are avaliable only for Windows because getting gato to work using the latest commit is very easy on Linux. Just look at the **Latest commit** section below.
-
-Before installing the binary, you still need to install libvips.
 
 Binaries can be found in the [releases](https://github.com/s-liwka/gato/releases) page.
 
@@ -33,7 +31,7 @@ Download setup.sh from scripts and run it as root. (with sudo, doas etc)
 
 #### Windows
 
-[libvips](https://www.libvips.org/install.html)
+[libvips](https://github.com/s-liwka/gato/wiki/Installing-libvips-on-Windows)
 
 [git](https://git-scm.com/download/win) - **when installing, select the add git to path option!**
 
