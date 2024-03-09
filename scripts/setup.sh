@@ -9,6 +9,7 @@ pip install -r requirements.txt
 cp scripts/gato-cli.sh /usr/local/bin/gato-cli
 cp scripts/gato-gui.sh /usr/local/bin/gato-gui
 cp scripts/gato-update.sh /usr/local/bin/gato-update
+cp resources/gato-gui.desktop /usr/share/applications
 chmod +x /usr/local/bin/gato-update
 chmod +x /usr/local/bin/gato-gui
 chmod +x /usr/local/bin/gato-cli
