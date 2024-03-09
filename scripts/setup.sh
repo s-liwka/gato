@@ -13,4 +13,6 @@ cp resources/gato-gui.desktop /usr/share/applications
 chmod +x /usr/local/bin/gato-update
 chmod +x /usr/local/bin/gato-gui
 chmod +x /usr/local/bin/gato-cli
-echo "INSTALL LIBVIPS BEFORE RUNNING!!"
+echo ####################################
+echo #      GATO SETUP SUCCESSFUL       #
+echo ####################################
