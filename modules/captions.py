@@ -1,32 +1,42 @@
 import os
-import pyvips
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 import shutil
 import tempfile
+import textwrap
 
 # making them async is useless
 
 tmp = tempfile.gettempdir()
 
-def generate_caption_image(captions: str, original_image: pyvips.Image, queue) -> str:
-    queue.put(f'[DEBUG] Function generate_caption_image called with captions "{captions}"')
-    fontsize = original_image.width / 10 # Adjust the divisor as needed
-    textwidth = original_image.width * .92
-    # stolen from mediaforge ez
-    out = pyvips.Image.text(
-        captions,
-        font=f"Twemoji Color Emoji,FuturaExtraBlackCondensed {fontsize}px",
-        rgba=True,
-        fontfile=os.path.join(os.getcwd(), "resources/caption.otf"),
-        align=pyvips.Align.CENTRE,
-        width=textwidth
-    )
 
-    out = out.composite((255, 255, 255, 255), mode=pyvips.BlendMode.DEST_OVER)
-    out = out.gravity(pyvips.CompassDirection.CENTRE, original_image.width, out.height + fontsize, extend=pyvips.Extend.WHITE)
-    out.write_to_file(os.path.join(tmp, 'caption.png'))
+def generate_caption_image(captions: str, original_image: Image, queue) -> str:
+    queue.put(f'[DEBUG] Function generate_caption_image called with captions "{captions}"')
+    fontsize = original_image.width // 10 # Adjust the divisor as needed
+    max_chars_per_line = int(fontsize * 0.92)
+    lines = textwrap.wrap(captions, width=max_chars_per_line)
+
+    # Calculate the total height needed for all lines
+    total_height = len(lines) * fontsize * 1.5 # Adjust the multiplier as needed
+    out = Image.new('RGBA', (original_image.width, int(total_height)), (255, 255, 255, 255))
+    draw = ImageDraw.Draw(out)
+
+    # Load the font (adjust the path as necessary)
+    font = ImageFont.truetype(os.path.join(os.getcwd(), "resources/caption.otf"), fontsize)
+
+    # Draw each line of the caption
+    y_text = 0
+    for line in lines:
+        text_width, text_height = draw.textsize(line, font=font)
+        position = ((original_image.width - text_width) // 2, y_text)
+        draw.text(position, line, font=font, fill=(0, 0, 0, 255))
+        y_text += text_height * 1.5 # Adjust the multiplier as needed for spacing between lines
+
+    # Save the image to a temporary file
+    out_path = os.path.join(tmp, 'caption.png')
+    out.save(out_path)
     queue.put(f'[DEBUG] Function generate_caption_image successful')
-    return os.path.join(tmp, 'caption.png')
+    return out_path
+
 
 def process_image(original_image: str, caption_image: str, output_path: str, queue) -> str:
     global tmp

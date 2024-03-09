@@ -1,9 +1,8 @@
 kivy
 git+https://github.com/dolfies/discord.py-self.git
 cryptography
-Pillow
+Pillow==9.5.0
 requests
-pyvips
 BeautifulSoup4
 g4f
 Brotli

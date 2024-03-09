@@ -4,7 +4,6 @@ import time
 import random
 import json
 import os
-import pyvips
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 import aiohttp
 import shutil
@@ -310,7 +309,7 @@ async def caption(ctx, *captions):
         else:
             path = await modules.attachments.download_attachment(ctx.message, bot.queue)
 
-        caption_path = modules.captions.generate_caption_image(captions, pyvips.Image.new_from_file(path), bot.queue)
+        caption_path = modules.captions.generate_caption_image(captions, Image.open(path), bot.queue)
 
         output_path = os.path.join(tmp, 'captioned.gif')
 
