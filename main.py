@@ -9,7 +9,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.lang import Builder
-from kivy.clock import Clock
+from kivy.core.window import Window
 import time
 from cryptography.fernet import Fernet
 import modules.token_tools
@@ -35,6 +35,7 @@ class Tab(TabbedPanel):
         self.update_console_thread = Thread(target=self.update_console)
         self.update_console_thread.daemon = True
         self.update_console_thread.start()
+        Window.bind(on_request_close=self.stop_bot)
 
 
     def on_kv_post(self, base_widget):
@@ -143,7 +144,7 @@ class Tab(TabbedPanel):
         self.bot_process.daemon = True
         self.bot_process.start()
 
-    def stop_bot(self):
+    def stop_bot(self, *args):
         if hasattr(self, 'bot_process') and self.bot_process.is_alive():
             self.ids.console.text += "\n[INFO] Killing the bot...\n"
             self.bot_process.kill()
