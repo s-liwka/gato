@@ -6,7 +6,7 @@ git clone https://github.com/s-liwka/gato.git
 
 cd gato
 python -m venv .venv
-call .venv\Scripts\activate
+call ".venv\Scripts\activate.bat"
 
 pip install -r requirements.txt
 
