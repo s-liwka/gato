@@ -4,11 +4,10 @@ setlocal
 cd "C:\Program Files"
 git clone https://github.com/s-liwka/gato.git
 
-cd gato
 python -m venv .venv
 call ".venv\Scripts\activate.bat"
 
-pip install -r 'requirements.txt'
+pip install -r "C:\Program Files\gato\requirements.txt"
 
 set SCRIPT="C:\Program Files\gato\scripts\gato-gui.bat"
 set SHORTCUT="%USERPROFILE%\Desktop\Gato.lnk"
