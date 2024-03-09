@@ -3,6 +3,6 @@ Type=Application
 Name=Gato
 Comment=Discord utility selfbot
 Path=/usr/local/bin/gato
-Exec=gato
+Exec=gato-gui
 Icon=/usr/local/bin/gato/resources/gato_pelon.png
 Terminal=false
