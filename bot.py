@@ -87,7 +87,7 @@ def load_config():
 
     return config, log
 
-class SliwkaSelfBot(commands.Bot):
+class Gato(commands.Bot):
 
     global config
     global log
@@ -158,7 +158,7 @@ class SliwkaSelfBot(commands.Bot):
 
 # config gets created here
 config, log = load_config()
-bot = SliwkaSelfBot(command_prefix=config['prefix'], self_bot=True, queue=None)
+bot = Gato(command_prefix=config['prefix'], self_bot=True, queue=None)
 
 
 async def confirm_destructive_action(ctx):
