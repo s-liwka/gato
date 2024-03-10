@@ -183,9 +183,51 @@ async def confirm_destructive_action(ctx):
         await ctx.reply("You didn't reply in time.", delete_after=config['delete_after_time'])
         return False
 
+async def split_message(ctx, message):
+    bot.queue.put("[DEBUG] Message is too long! Splitting into chunks...")
+
+    if ctx.message.author.premium:
+        max_length = 4000
+    else:
+        max_length = 2000
+
+    chunks = [message[i:i + max_length] for i in range(0, len(message), max_length)]
+    return chunks
+
 
 @bot.command()
+async def h(ctx):
+    msg = ""
+    msg += f"{config['prefix']}ping -> Checks your latency\n"
+    msg += f"{config['prefix']}mock -> mOcKs SoMeOnE. Reply to the message you wanna mock with the command\n"
+    msg += f"{config['prefix']}ddg -> Makes a duckduckgo query on the message you will respond to with this command\n"
+    msg += f"{config['prefix']}s -> Get the last deleted message from this channel\n"
+    msg += f"{config['prefix']}calc <equation> -> Do simple arithmetic\n"
+    msg += f"{config['prefix']}caption <caption> -> Caption a gif/image esmbot style. Reply to the image which you wish to caption\n"
+    msg += f"{config['prefix']}speechbubble -> Add a speech bubble to a gif/image. Reply to the image you wish to add the speech bubble to\n"
+    msg += f"{config['prefix']}togif -> Converts an image to a gif. Reply to the image you wish to convert\n"
+    msg += f"{config['prefix']}masscreate <name> <times> -> Creates a channel with the name <name> <times> times\n"
+    msg += f"{config['prefix']}massdelete <name> -> Deletes all channels with the provided name\n"
+    msg += f"{config['prefix']}roles <give/take> <member> <role name/id> -> Manage user's roles\n"
+    msg += f"{config['prefix']}gpt [--provider] [--ctx] -> Talk with a chatbot. --provider <provider> to select the bot and --ctx <num> to let the bot have the previous messages\n"
+    msg += f"{config['prefix']}convert <num> <unit from> <unit to> -> Convert lenght and weight units\n"
+    msg += f"{config['prefix']}clear <num> -> Deletes <num> messages from the channel\n"
+    msg += f"{config['prefix']}clean <num> -> Deletes <num> messages sent by you from the channel\n"
+    msg += f"{config['prefix']}nuke -> Nukes a channel\n"
+
+    if len(msg)>2000:
+        await ctx.message.delete()
+        chunks = await split_message(ctx, msg)
+
+        for chunk in chunks:
+            await ctx.send(chunk)
+
+    else:
+        await ctx.message.edit(msg)
+
+@bot.command(category='Utils')
 async def ping(ctx):
+    """If you found this using the help command then run the h command instead"""
     try:
         latency = bot.latency * 1000
         await ctx.reply(f'Pong! **{latency:.0f}ms**', delete_after=None)
@@ -197,6 +239,7 @@ async def ping(ctx):
 
 @bot.command()
 async def mock(ctx):
+    """mOcKs SoMeOnE. Reply to the message you wanna mock with the command"""
     bot.queue.put("[INFO] Command mock called")
     try:
         i = 0
@@ -220,21 +263,21 @@ async def mock(ctx):
 
 @bot.command()
 async def ddg(ctx, query: str=None):
+    """Makes a duckduckgo query on the message you will respond to with this command"""
     bot.queue.put(f"[INFO] Command DDG called. Query: {query}")
     try:
         if ctx.message.reference is not None:
-            await ctx.message.edit(f'https://duckduckgo.com/{ctx.message.reference.resolved.content}')
+            await ctx.message.edit(f'https://duckduckgo.com/?q={ctx.message.reference.resolved.content.replace(" ", "%20")}')
 
         else:
             if query is not None:
-                await ctx.message.edit(f'https://duckduckgo.com/{query}')
+                await ctx.message.edit(f'https://duckduckgo.com/?q={query.replace(" ", "%20")}')
             else:
                 await ctx.reply('Invalid syntax. ddg [query] or respond to a message with ddg', delete_after=config['delete_after_time'])
                 await ctx.message.remove()
                 bot.queue.put("[ERR] Command DDG: Invalid syntax: No query/reference message")
-        
-        bot.queue.put("[INFO] Command DDG successful")
 
+        bot.queue.put("[INFO] Command DDG successful")
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
@@ -243,6 +286,7 @@ async def ddg(ctx, query: str=None):
 
 @bot.command()
 async def s(ctx):
+    """Get the last deleted message from this channel"""
     global log
     bot.queue.put("[INFO] Command s (snipe) called")
     try:
@@ -279,6 +323,7 @@ async def s(ctx):
 
 @bot.command()
 async def calc(ctx, equation: str):
+    """Do simple arithmetic. Usage: calc <equation>"""
     bot.queue.put("[INFO] Command calc called")
     try:
         if len(equation) > 15:
@@ -295,6 +340,7 @@ async def calc(ctx, equation: str):
 
 @bot.command()
 async def caption(ctx, *captions):
+    """Caption a gif/image esmbot style. Usage: caption <caption> -- Reply to the image which you wish to caption."""
     try:
         captions = ' '.join(captions)
         tmp = tempfile.gettempdir()
@@ -334,6 +380,7 @@ async def caption(ctx, *captions):
 
 @bot.command()
 async def speechbubble(ctx):
+    """Add a speech bubble to a gif/image. Reply to the image you wish to add the speech bubble to"""
     bot.queue.put("[INFO] Command speechbubble called")
     try:
         tmp = tempfile.gettempdir()
@@ -369,16 +416,18 @@ async def speechbubble(ctx):
 
 @bot.command()
 async def togif(ctx):
+    """Convert an image to a gif. Reply to the image you wanna convert with this command"""
     bot.queue.put("[INFO] Command togif called")
     try:
+        tmp = tempfile.gettempdir()
         path = await modules.attachments.download_attachment(ctx.message, bot.queue) 
 
         image = Image.open(path)
-        image.save('/tmp/togif.gif', 'GIF')
+        image.save(os.path.join(tmp, 'togif.gif'), 'GIF')
 
         await ctx.message.delete()
-        await ctx.channel.send(file=discord.File('/tmp/togif.gif'))
-        os.remove('/tmp/togif.gif')
+        await ctx.channel.send(file=discord.File(os.path.join(tmp, 'togif.gif')))
+        os.remove(os.path.join(tmp, 'togif.gif'))
 
         bot.queue.put("[INFO] Command togif successful")
 
@@ -391,6 +440,7 @@ async def togif(ctx):
 # mass create
 @bot.command()
 async def masscreate(ctx, name, times):
+    """Create some channels with some name. Usage: masscreate <name> <times>"""
     bot.queue.put(f"[INFO] Command masscreate called. Name: {name}, {times} times")
     try:
 
@@ -404,6 +454,11 @@ async def masscreate(ctx, name, times):
         if ctx.message.guild is None:
             bot.queue.put("[ERR] Command masscreate: Not a guild")
             await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
+            return
+
+        
+        if not ctx.message.author.guild_permissions.manage_channels:
+            await ctx.send("You have insufficient permissions for this action. Required permission: Manage channels")
             return
 
         for i in range (0, times):
@@ -425,7 +480,7 @@ async def masscreate_error(ctx, error):
         
 
 # massdelete
-@bot.command()
+@bot.command(cog='Server Utils', enabled=False)
 async def massdelete(ctx, name):
     bot.queue.put("[INFO] Command massdelete called")
     await ctx.message.delete()
@@ -434,12 +489,19 @@ async def massdelete(ctx, name):
         bot.queue.put("[ERR] Command massdelete: Failure: Not a guild")
         await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
         return
+    
+
+    if not ctx.message.author.guild_permissions.manage_channels:
+        await ctx.send("You have insufficient permissions for this action. Required permission: Manage channels", delete_after=config['delete_after_time'])
+        return
 
     for channel in ctx.guild.channels:
         if channel.name == name:
             await channel.delete()
 
     bot.queue.put("[INFO] Command massdelete successful")
+
+
 
 @massdelete.error
 async def massdelete_error(ctx, error):
@@ -452,14 +514,20 @@ async def massdelete_error(ctx, error):
 async def nuke(ctx):
     try:
 
+        if ctx.message.guild is None:
+            await ctx.message.delete()
+            await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
+            return
+
+        if not ctx.message.author.guild_permissions.manage_channels:
+            await ctx.message.delete()
+            await ctx.send("You have insufficient permissions for this action. Required permission: Manage channels", delete_after=config['delete_after_time'])
+            return
+
         if config.get('prompt_for_destructive', True):
             if not await confirm_destructive_action(ctx):
                 await ctx.message.delete()
                 return
-
-        if ctx.message.guild is None:
-            await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
-            return
 
         info = {
             'name': ctx.channel.name,
@@ -548,6 +616,18 @@ async def clean_error(ctx, error):
 async def clear(ctx, count: int):
     bot.queue.put('[INFO] Command clear called')
     try:
+
+        if ctx.message.guild is None:
+            await ctx.message.delete()
+            await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
+            return
+
+        if not ctx.message.author.guild_permissions.manage_messages:
+            await ctx.message.delete()
+            await ctx.send("You have insufficient permissions for this action. Required permission: Manage messages", delete_after=config['delete_after_time'])
+            return
+
+
         await ctx.message.delete()
         messages_deleted = 0
         async for message in ctx.channel.history(limit=None):
@@ -574,8 +654,18 @@ async def clear_error(ctx, error):
 
 @bot.command()
 async def roles(ctx, action, member, role):
+    bot.queue.put(f'[INFO] Command roles called. Arguments: Action: {action} | Member: {member} | Role: {role}')
     try:
-        bot.queue.put(f'[INFO] Command roles called. Arguments: Action: {action} | Member: {member} | Role: {role}')
+
+        if ctx.message.guild is None:
+            await ctx.message.delete()
+            await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
+            return
+
+        if not ctx.message.author.guild_permissions.manage_roles:
+            await ctx.message.delete()
+            await ctx.send("You have insufficient permissions for this action. Required permission: Manage roles", delete_after=config['delete_after_time'])
+            return
 
         if role.isdigit():
             role = ctx.guild.get_role(int(role))
@@ -701,7 +791,14 @@ async def gpt(ctx, *prompt):
                 provider=provider,
             )
 
-            await ctx.message.edit(response)
+            if len(response)>2000:
+                await ctx.message.delete()
+                chunks = await split_message(ctx, response)
+
+                for chunk in chunks:
+                    await ctx.send(chunk)
+            else:
+                await ctx.message.edit(response)
             bot.queue.put(f"[INFO] Command GPT successful")
 
         except Exception as e:

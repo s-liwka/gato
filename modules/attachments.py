@@ -41,7 +41,8 @@ async def download_attachment(message, queue):
             if response.status == 200:
                 if '.gif' in url: extension = '.gif'
                 elif '.png' in url: extension = '.png'
-                elif url in ['.jpg', '.jpeg']: extension = '.jpg'
+                elif '.jpg' in url: extension = '.jpg'
+                elif '.jpeg' in url: extension = '.jpeg'
                 elif '.webp' in url: extension = '.webp'
                 else:
                     queue.put(f'[DEBUG] Function download_attachment: Invalid extension {extension}')
