@@ -97,7 +97,6 @@ class Gato(commands.Bot):
 
 
     async def on_ready(self):
-        print(f'haii!! {self.user} is weady!!! :3 meow')
         self.queue.put(f'[SUCCESS] Logged in as {self.user}')
 
 
@@ -480,7 +479,7 @@ async def masscreate_error(ctx, error):
         
 
 # massdelete
-@bot.command(cog='Server Utils', enabled=False)
+@bot.command()
 async def massdelete(ctx, name):
     bot.queue.put("[INFO] Command massdelete called")
     await ctx.message.delete()
@@ -711,7 +710,65 @@ async def roles(ctx, action, member, role):
         await ctx.message.delete()
 
     except Exception as e:
+        await ctx.reply(e, delete_after=config['delete_after_time'])
         bot.queue.put(f'[ERR] Command roles raised an exception: {e}')
+
+
+@roles.error
+async def roles_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Invalid syntax. Usage: `roles <give/take> <user> <role name/id>`", delete_after=config['delete_after_time'])
+
+
+@bot.command()
+async def nick(ctx, member, nickname: str=None):
+    try:
+
+        if ctx.message.guild is None:
+            await ctx.message.delete()
+            await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
+            return
+
+        if not ctx.message.author.guild_permissions.manage_nicknames and await commands.MemberConverter().convert(ctx, member) != ctx.author:
+            await ctx.message.delete()
+            await ctx.send("You have insufficient permissions for this action. Required permission: Manage nicknames", delete_after=config['delete_after_time'])
+            return
+        
+        if member == '@everyone':
+            if config.get('prompt_for_destructive', True):
+                if not await confirm_destructive_action(ctx):
+                    await ctx.message.delete()
+                    return
+
+            for m in ctx.guild.members:
+                await m.edit(nick=nickname)
+
+            if nickname is not None:
+                await ctx.send(f"Set everyone's nickname to **{nickname}**", delete_after=config['delete_after_time'])
+            else:
+                await ctx.send(f"Reset everyone's nickname", delete_after=config['delete_after_time'])
+        
+
+        else:
+            member = await commands.MemberConverter().convert(ctx, member)
+
+            if nickname is not None:
+                await ctx.send(f"Changed **{member}'s** nickname to **{nickname}**", delete_after=config['delete_after_time'])
+            else:
+                await ctx.send(f"Reset **{member}'s** nickname", delete_after=config['delete_after_time'])
+        
+            await member.edit(nick=nickname)
+
+        await ctx.message.delete()
+
+    except Exception as e:
+        await ctx.reply(e, delete_after=config['delete_after_time'])
+        await ctx.message.delete()
+        bot.queue.put(f'[ERR] Command nick raised an exception: {e}')
+
+    
+
+
 
 # gpt 
 @bot.command()
