@@ -11,11 +11,8 @@ def stretch_speechbuble(original_path: str, queue) -> Image:
     speechbubble_image = Image.open(os.path.join(os.getcwd(), 'resources/speechbubble.png'))
     original_image = Image.open(original_path)
 
-    #wtf rario twitter
-    width_ratio = original_image.width / speechbubble_image.width
-
     new_width = original_image.width
-    new_height = int(speechbubble_image.height * width_ratio)
+    new_height = int(speechbubble_image.height // (original_image.height/50))
     resized_speechbubble_image = speechbubble_image.resize((new_width, new_height))
 
     queue.put('[DEBUG] Function speechbubble.stretch_speechbuble successful')
@@ -27,13 +24,17 @@ def process_image(original_path: str, output_path: str, queue) -> str:
     original_image = Image.open(original_path)
     speechbubble_image = stretch_speechbuble(original_path, queue)
 
-    combined_height = speechbubble_image.height + original_image.height
-    combined_width = original_image.width
-    new_image = Image.new('RGBA', (combined_width, combined_height))
+    new_image = Image.new('RGBA', (original_image.width, original_image.height))
 
-    new_image.paste(speechbubble_image, (0,  0))
-    new_image.paste(original_image, (0, speechbubble_image.height))
+    new_image.paste(original_image, (0, 0))
+    new_image.paste(speechbubble_image, (0, 0), mask=speechbubble_image)
 
+    for x in range(speechbubble_image.width):
+        for y in range(speechbubble_image.height):
+            r, g, b, a = speechbubble_image.getpixel((x, y))
+            if (r > 200 and g < 200 and b < 200):
+                new_image.putpixel((x, y), (0,0,0,255))
+                
     new_image.save(output_path)
 
     queue.put(f'[DEBUG] Function speechbubble.process_image successful')
@@ -61,9 +62,17 @@ def process_animated_gif(original_path, output_path, queue):
 
     queue.put('[DEBUG] Function speechbubble.process_animated_gif: Applying speechbubble to each frame')
     for frame in frames:
-        new_frame = Image.new('RGBA', (original_image.width, original_image.height + speechbubble_image.height))
-        new_frame.paste(speechbubble_image, (0, 0))
-        new_frame.paste(frame, (0, speechbubble_image.height))
+        new_frame = Image.new('RGBA', (frame.width, frame.height))
+        new_frame.paste(frame, (0, 0))
+        new_frame.paste(speechbubble_image, (0, 0), mask=speechbubble_image)
+
+        for x in range(speechbubble_image.width):
+            for y in range(speechbubble_image.height):
+                r, g, b, a = speechbubble_image.getpixel((x, y))
+                if (r > 200 and g < 200 and b < 200):
+                    new_frame.putpixel((x, y), (255,255,255,255))
+
+
         processed_frames.append(new_frame)
 
     queue.put('[DEBUG] Function speechbubble.process_animated_gif: Saving processed frames as PNGs')
