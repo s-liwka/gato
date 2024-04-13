@@ -32,6 +32,11 @@ def load_config():
     global config
     global log
     config_file, config_dir = modules.paths.get_config_file_dir()
+    log = os.path.join(config_dir, 'log.json')
+
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+
     return config, log
 
 class Gato(commands.Bot):
