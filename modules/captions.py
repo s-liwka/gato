@@ -9,8 +9,8 @@ import textwrap
 tmp = tempfile.gettempdir()
 
 
-def generate_caption_image(captions: str, original_image: Image, queue) -> str:
-    queue.put(f'[DEBUG] Function generate_caption_image called with captions "{captions}"')
+def generate_caption_image(captions: str, original_image: Image) -> str:
+    print(f'[DEBUG] Function generate_caption_image called with captions "{captions}"')
     fontsize = original_image.width // 10 # Adjust the divisor as needed
     max_chars_per_line = int(fontsize * 0.92)
     lines = textwrap.wrap(captions, width=max_chars_per_line)
@@ -34,13 +34,13 @@ def generate_caption_image(captions: str, original_image: Image, queue) -> str:
     # Save the image to a temporary file
     out_path = os.path.join(tmp, 'caption.png')
     out.save(out_path)
-    queue.put(f'[DEBUG] Function generate_caption_image successful')
+    print(f'[DEBUG] Function generate_caption_image successful')
     return out_path
 
 
-def process_image(original_image: str, caption_image: str, output_path: str, queue) -> str:
+def process_image(original_image: str, caption_image: str, output_path: str) -> str:
     global tmp
-    queue.put('[DEBUG]  Function captions.process_image called')
+    print('[DEBUG]  Function captions.process_image called')
 
     caption_image = Image.open(caption_image)
     original_image = Image.open(original_image)
@@ -54,18 +54,18 @@ def process_image(original_image: str, caption_image: str, output_path: str, que
 
     new_image.save(output_path)
 
-    queue.put(f'[DEBUG]  Function captions.process_image successful')
+    print(f'[DEBUG]  Function captions.process_image successful')
 
 
 # i have no fucking idea how this works
 # chatgpt fixed my shitty code
-def process_animated_gif(original_path, caption_path, output_path, queue):
+def process_animated_gif(original_path, caption_path, output_path):
     global tmp
-    queue.put('[DEBUG]  Function process_animated_gif called')
+    print('[DEBUG]  Function process_animated_gif called')
     frames = []
     delays = []
 
-    queue.put('[DEBUG]  Function process_animated_gif: Extracting frames and their delays into an array')
+    print('[DEBUG]  Function process_animated_gif: Extracting frames and their delays into an array')
     with Image.open(original_path) as original_image:
         # Extract frames and delays
         for i, frame in enumerate(ImageSequence.Iterator(original_image)):
@@ -78,14 +78,14 @@ def process_animated_gif(original_path, caption_path, output_path, queue):
     caption_image = Image.open(caption_path)
     processed_frames = []
 
-    queue.put('[DEBUG]  Function process_animated_gif: Applying caption to each frame')
+    print('[DEBUG]  Function process_animated_gif: Applying caption to each frame')
     for frame in frames:
         new_frame = Image.new('RGBA', (original_image.width, original_image.height + caption_image.height))
         new_frame.paste(caption_image, (0, 0))
         new_frame.paste(frame, (0, caption_image.height))
         processed_frames.append(new_frame)
 
-    queue.put('[DEBUG]  Function process_animated_gif: Saving processed frames as PNGs')
+    print('[DEBUG]  Function process_animated_gif: Saving processed frames as PNGs')
     temp_dir = os.path.join(tmp, "processed_frames")
     os.makedirs(temp_dir, exist_ok=True)
     frame_paths = []
@@ -95,10 +95,10 @@ def process_animated_gif(original_path, caption_path, output_path, queue):
         frame.save(frame_path)
         frame_paths.append(frame_path)
 
-    queue.put('[DEBUG]  Function process_animated_gif: Combining processed frames into a GIF')
+    print('[DEBUG]  Function process_animated_gif: Combining processed frames into a GIF')
     images = [Image.open(frame_path) for frame_path in frame_paths]
     images[0].save(output_path, save_all=True, append_images=images[1:], duration=delays, loop=0)
 
     # Clean up temporary directory
     shutil.rmtree(temp_dir)
-    queue.put('[DEBUG]  Function process_animated_gif successful')
+    print('[DEBUG]  Function process_animated_gif successful')

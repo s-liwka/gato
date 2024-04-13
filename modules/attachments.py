@@ -27,8 +27,8 @@ async def get_gif_url_tenor(view_url: str) -> str:
     second_url = urls[1] if len(urls) >= 3 else None
     return second_url
 
-async def download_attachment(message, queue):
-    queue.put('[DEBUG] Function download_attachment called')
+async def download_attachment(message):
+    print('[DEBUG] Function download_attachment called')
     global tmp
     if isinstance(message, discord.Message):
         url = message.reference.resolved.attachments[0].url if message.reference.resolved.attachments else message.reference.resolved.content
@@ -45,12 +45,12 @@ async def download_attachment(message, queue):
                 elif '.jpeg' in url: extension = '.jpeg'
                 elif '.webp' in url: extension = '.webp'
                 else:
-                    queue.put(f'[DEBUG] Function download_attachment: Invalid extension {extension}')
+                    print(f'[DEBUG] Function download_attachment: Invalid extension {extension}')
                     return f'Invalid extension {extension}'
 
                 path = os.path.join(tmp, f'original_image{extension}')
-                queue.put(f'[DEBUG] Function download_attachment: Detected extension {extension}.')
-                queue.put(f'[DEBUG] Function download_attachment: Starting download...')
+                print(f'[DEBUG] Function download_attachment: Detected extension {extension}.')
+                print(f'[DEBUG] Function download_attachment: Starting download...')
                 with open(path, 'wb') as f:
                     while True:
                         chunk = await response.content.read(1024)
@@ -58,10 +58,10 @@ async def download_attachment(message, queue):
                             break
                         f.write(chunk)
             else:
-                queue.put(f'[DEBUG] Function download_attachment failed.{response.status} - {response.reason}')
+                print(f'[DEBUG] Function download_attachment failed.{response.status} - {response.reason}')
                 raise BaseException(f"Failed to caption the image: {response.status} - {response.reason}")
 
-    queue.put(f'[DEBUG] Function download_attachment: Finished succesfully. {path}')
+    print(f'[DEBUG] Function download_attachment: Finished succesfully. {path}')
     return path
 
 def is_animated(path):

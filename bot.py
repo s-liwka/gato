@@ -296,21 +296,21 @@ async def caption(ctx, *captions):
             print("[DEBUG] Command caption: Tenor detected")
             url = await modules.attachments.get_gif_url_tenor(ctx.message.reference.resolved.content)
             if url is not None:
-                path = await modules.attachments.download_attachment(url, bot.queue)
+                path = await modules.attachments.download_attachment(url)
 
         else:
-            path = await modules.attachments.download_attachment(ctx.message, bot.queue)
+            path = await modules.attachments.download_attachment(ctx.message)
 
-        caption_path = modules.captions.generate_caption_image(captions, Image.open(path), bot.queue)
+        caption_path = modules.captions.generate_caption_image(captions, Image.open(path))
 
         output_path = os.path.join(tmp, 'captioned.gif')
 
         if modules.attachments.is_animated(path):
             print('[DEBUG] Command caption: Creating animated image...')
-            modules.captions.process_animated_gif(path, caption_path, output_path, bot.queue)
+            modules.captions.process_animated_gif(path, caption_path, output_path)
         else:
             print('[DEBUG] Command caption: Creating static image...')
-            modules.captions.process_image(path, caption_path, output_path, bot.queue)
+            modules.captions.process_image(path, caption_path, output_path)
 
         await ctx.channel.send(file=discord.File(output_path))
         os.remove(output_path)
@@ -334,20 +334,20 @@ async def speechbubble(ctx):
             print("[DEBUG] Command speechbubble: Tenor detected")
             url = await modules.attachments.get_gif_url_tenor(ctx.message.reference.resolved.content)
             if url is not None:
-                path = await modules.attachments.download_attachment(url, bot.queue)
+                path = await modules.attachments.download_attachment(url)
 
         else:
-            path = await modules.attachments.download_attachment(ctx.message, bot.queue)
+            path = await modules.attachments.download_attachment(ctx.message)
     
 
         output_path = os.path.join(tmp, 'speechbubble.gif')
         
         if modules.attachments.is_animated(path):
             print('[DEBUG] Command speechbubble: Creating animated image...')
-            modules.speechbubble.process_animated_gif(path, output_path, bot.queue)
+            modules.speechbubble.process_animated_gif(path, output_path)
         else:
             print('[DEBUG] Command speechbubble: Creating static image...')
-            modules.speechbubble.process_image(path, output_path, bot.queue)
+            modules.speechbubble.process_image(path, output_path)
 
         await ctx.channel.send(file=discord.File(output_path))
         os.remove(output_path)
@@ -366,7 +366,7 @@ async def togif(ctx):
     print("[INFO] Command togif called")
     try:
         tmp = tempfile.gettempdir()
-        path = await modules.attachments.download_attachment(ctx.message, bot.queue) 
+        path = await modules.attachments.download_attachment(ctx.message) 
 
         image = Image.open(path)
         image.save(os.path.join(tmp, 'togif.gif'), 'GIF')
