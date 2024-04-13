@@ -32,4 +32,3 @@ def encrypt_token(token):
     cipher_suite = Fernet(key)
 
     return cipher_suite.encrypt(token)
-    

@@ -32,56 +32,6 @@ def load_config():
     global config
     global log
     config_file, config_dir = modules.paths.get_config_file_dir()
-
-    # sounds for play
-    if not os.path.exists(os.path.join(config_dir, 'sounds')):
-        os.makedirs(os.path.join(config_dir, 'sounds'), exist_ok=True)
-
-    default_config = {
-        "logger": False,
-        "sniper": False,
-        "profanity": False,
-        "prompt_destructive": True,
-        "delete_after_time": 5.0,
-        "prefix": ";",
-        "token": ""
-    }
-
-    # config
-    if not os.path.exists(config_file):
-        os.makedirs(config_dir, exist_ok=True)
-        with open(config_file, 'w') as f:
-            json.dump(default_config, f)
-
-    else:
-        # add keys if new options are added
-        with open(config_file, 'r') as f:
-            config = json.load(f)
-
-        for key, value in default_config.items():
-            if key not in config:
-                config[key] = value
-
-        with open(config_file, 'w') as f:
-            json.dump(config, f)
-
-    with open(config_file, 'r') as f:
-        config = json.load(f)
-
-    # log
-    log = os.path.join(config_dir, 'log.json')
-
-    if not os.path.exists(log):
-        with open(log, 'w') as f:
-            messages = {}
-            json.dump(messages, f)
-
-    # token key
-    if not os.path.exists(os.path.join(config_dir, 'token_encryption_key')):
-        with open(os.path.join(config_dir, 'token_encryption_key'), 'wb') as f:
-            key = Fernet.generate_key()
-            f.write(key)
-
     return config, log
 
 class Gato(commands.Bot):
