@@ -33,12 +33,14 @@ def load_config():
 if __name__ == "__main__":
     config_file, config_dir = modules.paths.get_config_file_dir()
 
+    os.makedirs(config_dir, exist_ok=True)
+
     parser = argparse.ArgumentParser(description='Gato CLI')
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
 
     ###########################################################################################################################
 
-    config_parser = subparsers.add_parser('config', help='Configure gato')
+    config_parser = subparsers.add_parser('set', help='Configure gato')
     config_subparsers = config_parser.add_subparsers(dest='config_option', help='Configuration option to set')
 
     sniper_parser = config_subparsers.add_parser('sniper', help='Enable or disable the nitro sniper')
