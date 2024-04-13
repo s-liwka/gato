@@ -4,6 +4,7 @@ import modules.paths
 import json
 import time
 import os
+from cryptography.fernet import Fernet
 
 class BooleanAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
