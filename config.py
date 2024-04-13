@@ -1,5 +1,4 @@
 import argparse
-
 import modules.token_tools
 import modules.paths
 import json
@@ -25,17 +24,13 @@ def yes_no(message):
         else:
             print('Invalid selection.')
 
-
-
 def load_config():
     config_file, config_dir = modules.paths.get_config_file_dir()
     with open(config_file, 'r') as f:
         config = json.load(f)
-
-        return config
+    return config
 
 if __name__ == "__main__":
-
     config_file, config_dir = modules.paths.get_config_file_dir()
 
     parser = argparse.ArgumentParser(description='Gato CLI')
@@ -43,10 +38,6 @@ if __name__ == "__main__":
 
     ###########################################################################################################################
 
-    run_parser = subparsers.add_parser('run', help='Run gato')
-    run_parser.add_argument('--unencrypted_token', action='store_true', help="Won't attempt to decrypt the token while starting")
-
-    ###########################################################################################################################
     config_parser = subparsers.add_parser('config', help='Configure gato')
     config_subparsers = config_parser.add_subparsers(dest='config_option', help='Configuration option to set')
 
@@ -75,38 +66,6 @@ if __name__ == "__main__":
     configurator_parser.add_argument('--dont_encrypt', action='store_true', help="Won't encrypt the token while configuring")
 
     args = parser.parse_args()
-
-    if args.command == 'run':
-        config = load_config()
-        print("[INFO] Starting gato...\n")
-        print("[INFO] Validating token...\n")
-
-        if args.unencrypted_token:
-            token = config['token']
-        else:
-            token = modules.token_tools.decrypt_token(config['token'])
-
-        check_token = modules.token_tools.validate(token)
-
-        if check_token == 'invalid':
-            print("[ERR] Invalid token.")
-            exit()
-        elif check_token == 'err':
-            print("[WARN] An error has occured while validating the token. Continuing...\n")
-        else:
-            print("[SUCCESS] Valid token.")
-
-        queue = Queue()
-        bot_process = Process(target=bot.main, args=(token, queue))
-        bot_process.daemon = True
-        bot_process.start()
-
-        
-        while True:
-            if not queue.empty():
-                print(queue.get())
-            time.sleep(0.1)
-    
 
     if args.command == 'config':
         config = load_config()
