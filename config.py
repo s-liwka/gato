@@ -4,7 +4,6 @@ import modules.paths
 import json
 import time
 import os
-from cryptography.fernet import Fernet
 
 class BooleanAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -80,13 +79,6 @@ if __name__ == "__main__":
             messages = {}
             json.dump(messages, f)
 
-    # token key
-    if not os.path.exists(os.path.join(config_dir, 'token_encryption_key')):
-        with open(os.path.join(config_dir, 'token_encryption_key'), 'wb') as f:
-            key = Fernet.generate_key()
-            f.write(key)
-
-
     parser = argparse.ArgumentParser(description='Gato CLI')
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
 
@@ -100,8 +92,6 @@ if __name__ == "__main__":
 
     token_parser = config_subparsers.add_parser('token', help='Set the token')
     token_parser.add_argument('value', type=str, help='The token value')
-    token_parser.add_argument('--dont_encrypt', action='store_true', help="Won't encrypt the token while configuring")
-
     delete_after_time_parser = config_subparsers.add_parser('delete_after_time', help='Set the delete after time')
     delete_after_time_parser.add_argument('value', type=float, help='The time in seconds before the self-bot deletes its own messages')
 
@@ -117,7 +107,6 @@ if __name__ == "__main__":
     ###########################################################################################################################
 
     configurator_parser = subparsers.add_parser('configurator', help='Set-up gato')
-    configurator_parser.add_argument('--dont_encrypt', action='store_true', help="Won't encrypt the token while configuring")
 
     args = parser.parse_args()
 
@@ -144,10 +133,7 @@ if __name__ == "__main__":
                 elif validate == 'err':
                     print("WARNING: AN ERROR HAS OCCURED WHILE CHECKING THE TOKEN")
 
-            if args.dont_encrypt:
-                config['token'] =  token
-            else:
-                config['token'] = modules.token_tools.encrypt_token(token.encode('utf-8')).decode('utf-8')
+            config['token'] =  token
 
         with open(config_file, 'w') as f:
             json.dump(config, f)
@@ -192,10 +178,6 @@ if __name__ == "__main__":
                     break
                 except ValueError:
                     print("That's not a number")
-
-
-        if not args.dont_encrypt:
-            token = modules.token_tools.encrypt_token(token.encode('utf-8')).decode('utf-8')
 
         config = {
             "token": token,

@@ -11,7 +11,6 @@ import platform
 import tempfile
 import g4f
 import asyncio
-from cryptography.fernet import Fernet
 
 import modules.captions
 import modules.speechbubble
@@ -883,4 +882,4 @@ async def play(ctx, filename):
 
 
 
-bot.run(modules.token_tools.decrypt_token(config['token']))
+bot.run(config['token'])
