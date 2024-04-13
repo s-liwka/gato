@@ -19,8 +19,6 @@ import modules.attachments
 import modules.token_tools
 import modules.nitro_sniper
 
-from queue import Queue
-
 
 import modules.paths
 
@@ -91,13 +89,8 @@ class Gato(commands.Bot):
     global config
     global log
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.queue = kwargs.get('queue', Queue())
-
-
     async def on_ready(self):
-        self.queue.put(f'[SUCCESS] Logged in as {self.user}')
+        print(f'[SUCCESS] Logged in as {self.user}')
 
 
     async def on_message_delete(self, message):
@@ -130,7 +123,7 @@ class Gato(commands.Bot):
             with open(log, 'w') as f:
                 json.dump(messages, f)
 
-            self.queue.put(f"[INFO] Logged message -> {message.author.name.replace('#0', '')}: {message.content}")
+            print(f"[INFO] Logged message -> {message.author.name.replace('#0', '')}: {message.content}")
 
     async def on_message(self, message):
         await self.process_commands(message)
@@ -150,13 +143,13 @@ class Gato(commands.Bot):
 
             if response is not None:
                 if response['code'] == 10038:
-                    self.queue.put("[INFO] Nitro Sniper: Unknown gift code")
+                    print("[INFO] Nitro Sniper: Unknown gift code")
                 else:
-                    self.queue.put("[INFO] Nitro Sniper: NOT an unknown gift code. Maybe expired or success idk what codes there are")
+                    print("[INFO] Nitro Sniper: NOT an unknown gift code. Maybe success idk what codes there are")
 
 # config gets created here
 config, log = load_config()
-bot = Gato(command_prefix=config['prefix'], self_bot=True, queue=None)
+bot = Gato(command_prefix=config['prefix'], self_bot=True)
 
 
 async def confirm_destructive_action(ctx):
@@ -183,7 +176,7 @@ async def confirm_destructive_action(ctx):
         return False
 
 async def split_message(ctx, message):
-    bot.queue.put("[DEBUG] Message is too long! Splitting into chunks...")
+    print("[DEBUG] Message is too long! Splitting into chunks...")
 
     if ctx.message.author.premium:
         max_length = 4000
@@ -230,16 +223,16 @@ async def ping(ctx):
     try:
         latency = bot.latency * 1000
         await ctx.reply(f'Pong! **{latency:.0f}ms**', delete_after=None)
-        bot.queue.put(f'[INFO] Latency: {latency:.0f}ms')
+        print(f'[INFO] Latency: {latency:.0f}ms')
     
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] Ping command raised an exception: {e}")
+        print(f"[ERR] Ping command raised an exception: {e}")
 
 @bot.command()
 async def mock(ctx):
     """mOcKs SoMeOnE. Reply to the message you wanna mock with the command"""
-    bot.queue.put("[INFO] Command mock called")
+    print("[INFO] Command mock called")
     try:
         i = 0
         message = ''
@@ -251,19 +244,19 @@ async def mock(ctx):
                 message += char.upper()
 
         await ctx.message.edit(message)
-        bot.queue.put("[INFO] Command mock successful")
+        print("[INFO] Command mock successful")
 
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] Mock command raised an exception: {e}")
+        print(f"[ERR] Mock command raised an exception: {e}")
 
 
 
 @bot.command()
 async def ddg(ctx, query: str=None):
     """Makes a duckduckgo query on the message you will respond to with this command"""
-    bot.queue.put(f"[INFO] Command DDG called. Query: {query}")
+    print(f"[INFO] Command DDG called. Query: {query}")
     try:
         if ctx.message.reference is not None:
             await ctx.message.edit(f'https://duckduckgo.com/?q={ctx.message.reference.resolved.content.replace(" ", "%20")}')
@@ -274,20 +267,20 @@ async def ddg(ctx, query: str=None):
             else:
                 await ctx.reply('Invalid syntax. ddg [query] or respond to a message with ddg', delete_after=config['delete_after_time'])
                 await ctx.message.remove()
-                bot.queue.put("[ERR] Command DDG: Invalid syntax: No query/reference message")
+                print("[ERR] Command DDG: Invalid syntax: No query/reference message")
 
-        bot.queue.put("[INFO] Command DDG successful")
+        print("[INFO] Command DDG successful")
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] DDG command raised an exception: {e}")
+        print(f"[ERR] DDG command raised an exception: {e}")
 
 
 @bot.command()
 async def s(ctx):
     """Get the last deleted message from this channel"""
     global log
-    bot.queue.put("[INFO] Command s (snipe) called")
+    print("[INFO] Command s (snipe) called")
     try:
         with open(log, 'r') as f:
             data = json.load(f)
@@ -312,29 +305,29 @@ async def s(ctx):
         except:
             await ctx.message.edit(f"No logged messages in this channel found.")
 
-        bot.queue.put("[INFO] Command s (snipe) successful")
+        print("[INFO] Command s (snipe) successful")
 
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] Snipe command raised an exception: {e}")
+        print(f"[ERR] Snipe command raised an exception: {e}")
 
 
 @bot.command()
 async def calc(ctx, equation: str):
     """Do simple arithmetic. Usage: calc <equation>"""
-    bot.queue.put("[INFO] Command calc called")
+    print("[INFO] Command calc called")
     try:
         if len(equation) > 15:
             await ctx.reply('Equation too long', delete_after=config['delete_after_time'])
             return
         await ctx.message.edit(f"{ctx.message.content.replace('.calc ', '')} = {eval(equation)}")
-        bot.queue.put("[INFO] Command calc successful")
+        print("[INFO] Command calc successful")
 
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] Calc command raised an exception: {e}")
+        print(f"[ERR] Calc command raised an exception: {e}")
 
 
 @bot.command()
@@ -343,10 +336,10 @@ async def caption(ctx, *captions):
     try:
         captions = ' '.join(captions)
         tmp = tempfile.gettempdir()
-        bot.queue.put(f'[INFO] Command caption called. Captions: {captions}')
+        print(f'[INFO] Command caption called. Captions: {captions}')
 
         if ctx.message.reference.resolved.content and 'tenor.com' in ctx.message.reference.resolved.content:
-            bot.queue.put("[DEBUG] Command caption: Tenor detected")
+            print("[DEBUG] Command caption: Tenor detected")
             url = await modules.attachments.get_gif_url_tenor(ctx.message.reference.resolved.content)
             if url is not None:
                 path = await modules.attachments.download_attachment(url, bot.queue)
@@ -359,32 +352,32 @@ async def caption(ctx, *captions):
         output_path = os.path.join(tmp, 'captioned.gif')
 
         if modules.attachments.is_animated(path):
-            bot.queue.put('[DEBUG] Command caption: Creating animated image...')
+            print('[DEBUG] Command caption: Creating animated image...')
             modules.captions.process_animated_gif(path, caption_path, output_path, bot.queue)
         else:
-            bot.queue.put('[DEBUG] Command caption: Creating static image...')
+            print('[DEBUG] Command caption: Creating static image...')
             modules.captions.process_image(path, caption_path, output_path, bot.queue)
 
         await ctx.channel.send(file=discord.File(output_path))
         os.remove(output_path)
         await ctx.message.delete()
 
-        bot.queue.put('[INFO] Command caption successful')
+        print('[INFO] Command caption successful')
 
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] Caption command raised an exception: {e}")
+        print(f"[ERR] Caption command raised an exception: {e}")
 
 
 @bot.command()
 async def speechbubble(ctx):
     """Add a speech bubble to a gif/image. Reply to the image you wish to add the speech bubble to"""
-    bot.queue.put("[INFO] Command speechbubble called")
+    print("[INFO] Command speechbubble called")
     try:
         tmp = tempfile.gettempdir()
         if ctx.message.reference.resolved.content and 'tenor.com' in ctx.message.reference.resolved.content:
-            bot.queue.put("[DEBUG] Command speechbubble: Tenor detected")
+            print("[DEBUG] Command speechbubble: Tenor detected")
             url = await modules.attachments.get_gif_url_tenor(ctx.message.reference.resolved.content)
             if url is not None:
                 path = await modules.attachments.download_attachment(url, bot.queue)
@@ -396,27 +389,27 @@ async def speechbubble(ctx):
         output_path = os.path.join(tmp, 'speechbubble.gif')
         
         if modules.attachments.is_animated(path):
-            bot.queue.put('[DEBUG] Command speechbubble: Creating animated image...')
+            print('[DEBUG] Command speechbubble: Creating animated image...')
             modules.speechbubble.process_animated_gif(path, output_path, bot.queue)
         else:
-            bot.queue.put('[DEBUG] Command speechbubble: Creating static image...')
+            print('[DEBUG] Command speechbubble: Creating static image...')
             modules.speechbubble.process_image(path, output_path, bot.queue)
 
         await ctx.channel.send(file=discord.File(output_path))
         os.remove(output_path)
         await ctx.message.delete()
-        bot.queue.put("[INFO] Command speechbubble successful")
+        print("[INFO] Command speechbubble successful")
 
 
 
     except Exception as e:
         await ctx.reply(f"[ERR]: {e}")
-        bot.queue.put(f"[ERR] Speechbubble command raised an exception: {e}")
+        print(f"[ERR] Speechbubble command raised an exception: {e}")
 
 @bot.command()
 async def togif(ctx):
     """Convert an image to a gif. Reply to the image you wanna convert with this command"""
-    bot.queue.put("[INFO] Command togif called")
+    print("[INFO] Command togif called")
     try:
         tmp = tempfile.gettempdir()
         path = await modules.attachments.download_attachment(ctx.message, bot.queue) 
@@ -428,30 +421,30 @@ async def togif(ctx):
         await ctx.channel.send(file=discord.File(os.path.join(tmp, 'togif.gif')))
         os.remove(os.path.join(tmp, 'togif.gif'))
 
-        bot.queue.put("[INFO] Command togif successful")
+        print("[INFO] Command togif successful")
 
 
     except Exception as e:
         await ctx.reply(f'[ERR]: {e}', delete_after=config['delete_after_time'])
-        bot.queue.put(f'[ERR] Command togif raised an exception: {e}')
+        print(f'[ERR] Command togif raised an exception: {e}')
 
 
 # mass create
 @bot.command()
 async def masscreate(ctx, name, times):
     """Create some channels with some name. Usage: masscreate <name> <times>"""
-    bot.queue.put(f"[INFO] Command masscreate called. Name: {name}, {times} times")
+    print(f"[INFO] Command masscreate called. Name: {name}, {times} times")
     try:
 
         try:
             times = int(times)
         except:
-            bot.queue.put("[ERR] Command masscreate: Invalid syntax: times is not int")
+            print("[ERR] Command masscreate: Invalid syntax: times is not int")
             await ctx.send("Invalid syntax. Usage: `masscreate <name> <times>`", delete_after=config['delete_after_time'])
             return
         
         if ctx.message.guild is None:
-            bot.queue.put("[ERR] Command masscreate: Not a guild")
+            print("[ERR] Command masscreate: Not a guild")
             await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
             return
 
@@ -465,12 +458,12 @@ async def masscreate(ctx, name, times):
         
         await ctx.message.delete()
 
-        bot.queue.put("[INFO] Command masscreate successful")
+        print("[INFO] Command masscreate successful")
 
     except Exception as e:
         await ctx.channel.delete()
         await ctx.send(f'[ERR]: {e}')
-        bot.queue.put(f'[ERR] Command masscreate raised an exception: {e}')
+        print(f'[ERR] Command masscreate raised an exception: {e}')
 
 @masscreate.error
 async def masscreate_error(ctx, error):
@@ -481,11 +474,11 @@ async def masscreate_error(ctx, error):
 # massdelete
 @bot.command()
 async def massdelete(ctx, name):
-    bot.queue.put("[INFO] Command massdelete called")
+    print("[INFO] Command massdelete called")
     await ctx.message.delete()
 
     if ctx.message.guild is None:
-        bot.queue.put("[ERR] Command massdelete: Failure: Not a guild")
+        print("[ERR] Command massdelete: Failure: Not a guild")
         await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
         return
     
@@ -498,7 +491,7 @@ async def massdelete(ctx, name):
         if channel.name == name:
             await channel.delete()
 
-    bot.queue.put("[INFO] Command massdelete successful")
+    print("[INFO] Command massdelete successful")
 
 
 
@@ -512,39 +505,53 @@ async def massdelete_error(ctx, error):
 @bot.command()
 async def nuke(ctx):
     try:
-
+        # Check if the command is being used in a guild
         if ctx.message.guild is None:
             await ctx.message.delete()
             await ctx.send("This is a DM channel, but the command can only run on guilds.", delete_after=config['delete_after_time'])
             return
 
+        # Check if the user has the manage_channels permission
         if not ctx.message.author.guild_permissions.manage_channels:
             await ctx.message.delete()
             await ctx.send("You have insufficient permissions for this action. Required permission: Manage channels", delete_after=config['delete_after_time'])
             return
 
+        # Prompt for confirmation if configured to do so
         if config.get('prompt_for_destructive', True):
             if not await confirm_destructive_action(ctx):
                 await ctx.message.delete()
                 return
 
+        # Capture the channel's information and permissions
         info = {
             'name': ctx.channel.name,
             'topic': ctx.channel.topic,
             'category': ctx.channel.category,
             'nsfw': ctx.channel.nsfw,
             'slowmode_delay': ctx.channel.slowmode_delay,
-            'position': ctx.channel.position
+            'position': ctx.channel.position,
+            'overwrites': ctx.channel.overwrites # Capture the channel's permission overwrites
         }
-        
+
+        # Delete the channel
         await ctx.channel.delete()
-        await ctx.guild.create_text_channel(name=info['name'], category=info['category'], topic=info['topic'], nsfw=info['nsfw'], position=info['position'], slowmode_delay=info['slowmode_delay'])
+
+        # Recreate the channel with the captured information and permissions
+        new_channel = await ctx.guild.create_text_channel(
+            name=info['name'],
+            category=info['category'],
+            topic=info['topic'],
+            nsfw=info['nsfw'],
+            position=info['position'],
+            slowmode_delay=info['slowmode_delay'],
+            overwrites=info['overwrites'] # Apply the captured permission overwrites
+        )
 
     except Exception as e:
         await ctx.channel.delete()
         await ctx.send(f'[ERR]: {e}')
-        bot.queue.put(f'[ERR] Command nuke raised an exception: {e}')
-        
+        print(f'[ERR] Command nuke raised an exception: {e}')
 
 
 
@@ -595,11 +602,11 @@ async def clean(ctx, count: int):
                     break
 
         await ctx.send(f'Deleted {count} messages sent by myself.')
-        bot.queue.put('[INFO] Command clean successful')
+        print('[INFO] Command clean successful')
 
     except Exception as e:
         await ctx.send(f'[ERR]: {e}')
-        bot.queue.put(f'[ERR] Command clean raised an exception: {e}')
+        print(f'[ERR] Command clean raised an exception: {e}')
         
 
 @clean.error
@@ -613,7 +620,7 @@ async def clean_error(ctx, error):
 # clear
 @bot.command()
 async def clear(ctx, count: int):
-    bot.queue.put('[INFO] Command clear called')
+    print('[INFO] Command clear called')
     try:
 
         if ctx.message.guild is None:
@@ -636,11 +643,11 @@ async def clear(ctx, count: int):
                 break
         
         await ctx.send(f'Deleted {count} messages.')
-        bot.queue.put('[INFO] Command clear successful')
+        print('[INFO] Command clear successful')
 
     except Exception as e:
         await ctx.send(f'[ERR]: {e}')
-        bot.queue.put(f'[ERR] Command clear raised an exception: {e}')
+        print(f'[ERR] Command clear raised an exception: {e}')
         
 
 @clear.error
@@ -653,7 +660,7 @@ async def clear_error(ctx, error):
 
 @bot.command()
 async def roles(ctx, action, member, role):
-    bot.queue.put(f'[INFO] Command roles called. Arguments: Action: {action} | Member: {member} | Role: {role}')
+    print(f'[INFO] Command roles called. Arguments: Action: {action} | Member: {member} | Role: {role}')
     try:
 
         if ctx.message.guild is None:
@@ -711,7 +718,7 @@ async def roles(ctx, action, member, role):
 
     except Exception as e:
         await ctx.reply(e, delete_after=config['delete_after_time'])
-        bot.queue.put(f'[ERR] Command roles raised an exception: {e}')
+        print(f'[ERR] Command roles raised an exception: {e}')
 
 
 @roles.error
@@ -764,7 +771,7 @@ async def nick(ctx, member, nickname: str=None):
     except Exception as e:
         await ctx.reply(e, delete_after=config['delete_after_time'])
         await ctx.message.delete()
-        bot.queue.put(f'[ERR] Command nick raised an exception: {e}')
+        print(f'[ERR] Command nick raised an exception: {e}')
 
     
 
@@ -773,7 +780,7 @@ async def nick(ctx, member, nickname: str=None):
 # gpt 
 @bot.command()
 async def gpt(ctx, *prompt):
-    bot.queue.put("[INFO] Command GPT called")
+    print("[INFO] Command GPT called")
     try:
         prompt = list(prompt)
         if '--provider' in prompt:
@@ -789,7 +796,7 @@ async def gpt(ctx, *prompt):
         else:
             context_window = None
 
-        bot.queue.put(f'[DEBUG] Command GPT: {"Detected provider argument "+provider+". " if provider is not None else "No provider argument detected. Using the default. "}{"Detected context window "+str(context_window)+"." if context_window is not None else "No context window detected."}')
+        print(f'[DEBUG] Command GPT: {"Detected provider argument "+provider+". " if provider is not None else "No provider argument detected. Using the default. "}{"Detected context window "+str(context_window)+"." if context_window is not None else "No context window detected."}')
         
         prompt = ' '.join(prompt)
 
@@ -810,16 +817,16 @@ async def gpt(ctx, *prompt):
 
 
                 except Exception as e:
-                    bot.queue.put(f'[ERR] Command GPT: Fetching history: {e}')
+                    print(f'[ERR] Command GPT: Fetching history: {e}')
                     return       
 
             except:
                 await ctx.reply('Invalid syntax. Context window must be a number.', delete_after=config['delete_after_time'])
                 await ctx.message.delete()
-                bot.queue.put(f'[ERR] Command GPT: Invalid syntax. Context window must be a number.')
+                print(f'[ERR] Command GPT: Invalid syntax. Context window must be a number.')
                 return
 
-        bot.queue.put(f'[DEBUG] Command GPT: Prompt is "{prompt}"')
+        print(f'[DEBUG] Command GPT: Prompt is "{prompt}"')
 
         if provider is None:
             provider = g4f.Provider.You
@@ -836,7 +843,7 @@ async def gpt(ctx, *prompt):
         if not found:
             await ctx.reply(f'[ERR] Provider "{provider}" either doesnt exist or isnt working', delete_after=config['delete_after_time'])
             await ctx.message.delete()
-            bot.queue.put(f'[ERR] Command GPT: Provider "{provider}" either doesnt exist or isnt working')
+            print(f'[ERR] Command GPT: Provider "{provider}" either doesnt exist or isnt working')
             return
 
         await ctx.message.edit("Please wait, generating response...")
@@ -856,17 +863,17 @@ async def gpt(ctx, *prompt):
                     await ctx.send(chunk)
             else:
                 await ctx.message.edit(response)
-            bot.queue.put(f"[INFO] Command GPT successful")
+            print(f"[INFO] Command GPT successful")
 
         except Exception as e:
             await ctx.reply(f'[ERR] Exception while generating an response: {e}', delete_after=config['delete_after_time'])
             await ctx.message.delete()
-            bot.queue.put(f'[ERR] Command GPT: Generating response: {e}')
+            print(f'[ERR] Command GPT: Generating response: {e}')
             
     except Exception as e:
         await ctx.reply(f'[ERR]: {e}', delete_after=config['delete_after_time'])
         await ctx.message.delete()
-        bot.queue.put(f'[ERR] Command GPT: {e}')
+        print(f'[ERR] Command GPT: {e}')
 
 
 # soundboard free nitro real
@@ -874,14 +881,14 @@ async def gpt(ctx, *prompt):
 
 @bot.command()
 async def play(ctx, filename):
-    bot.queue.put('[INFO] Play command called')
+    print('[INFO] Play command called')
 
     print(ctx.voice_client)
     try:
         config_file, config_dir = modules.paths.get_config_file_dir()
 
         if not '/' in filename:
-            bot.queue.put('[DEBUG] Play command: Using the sounds directory')
+            print('[DEBUG] Play command: Using the sounds directory')
             found = False
             for file in os.listdir(os.path.join(config_dir, 'sounds')):
                 if filename in file:
@@ -892,16 +899,16 @@ async def play(ctx, filename):
             
             if not found:
                 await ctx.reply(f'[ERR] File **"{filename}"** doesnt exist')
-                bot.queue.put(f'[ERR] Play command: File "{filename}" doesnt exist')
+                print(f'[ERR] Play command: File "{filename}" doesnt exist')
                 await ctx.message.delete()
                 return               
 
         else:
-            bot.queue.put('[DEBUG] Play command: Using path to file')
+            print('[DEBUG] Play command: Using path to file')
         
             if not os.path.exists(filename):
                 await ctx.reply(f'[ERR] File **"{filename}"** doesnt exist')
-                bot.queue.put(f'[ERR] Play command: File "{filename}" doesnt exist')
+                print(f'[ERR] Play command: File "{filename}" doesnt exist')
                 await ctx.message.delete()
                 return
 
@@ -909,22 +916,16 @@ async def play(ctx, filename):
                 path = filename
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(path))
             
-        bot.queue.put(f'[DEBUG] Play command: Playing sound {path}')
+        print(f'[DEBUG] Play command: Playing sound {path}')
 
 
         ctx.voice_client.play(source, after=lambda e: print(f'Player error: {e}') if e else None)
 
     except Exception as e:
         await ctx.reply(f'[ERR]: {e}')
-        bot.queue.put(f'[ERR] Play command raised an exception: {e}')
+        print(f'[ERR] Play command raised an exception: {e}')
         await ctx.message.delete()
 
 
 
-def main(token, queue):
-    global bot
-    queue.put('[INFO] Logging in...')
-    config, log = load_config()
-    bot.queue = queue
-    bot.command_prefix = config['prefix']
-    bot.run(token)
+bot.run(modules.token_tools.decrypt_token(config['token']))

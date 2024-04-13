@@ -29,7 +29,7 @@ def generate_caption_image(captions: str, original_image: Image, queue) -> str:
         text_width, text_height = draw.textsize(line, font=font)
         position = ((original_image.width - text_width) // 2, y_text)
         draw.text(position, line, font=font, fill=(0, 0, 0, 255))
-        y_text += text_height * 1.5 # Adjust the multiplier as needed for spacing between lines
+        y_text += text_height * 1.5
 
     # Save the image to a temporary file
     out_path = os.path.join(tmp, 'caption.png')

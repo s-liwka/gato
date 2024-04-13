@@ -9,7 +9,8 @@ def get_config_file_dir():
         if os.environ.get('ANDROID_ROOT') is None:
             config_dir = os.path.join(os.path.expanduser('~'), '.config', 'gato')  
         else:
-            config_dir = os.path.join(os.getenv("EXTERNAL_STORAGE"), 'gato')
+            print(f'mf really using android')
+            exit()
     elif platform.system() == 'Windows':
         config_dir = os.path.join(os.environ['LOCALAPPDATA'], 'gato')
     else:
