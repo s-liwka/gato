@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.command == 'config':
+    if args.command == 'set':
         config = load_config()
 
         if args.config_option == 'sniper':
@@ -137,6 +137,8 @@ if __name__ == "__main__":
 
         with open(config_file, 'w') as f:
             json.dump(config, f)
+
+
         print(f"Update the value {args.config_option} to {args.value}")
                 
 
