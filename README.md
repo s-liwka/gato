@@ -40,6 +40,9 @@ python3 bot.py
 ```
 
 
+If you ever want to update just run `git pull` in the gato directory
+
+
 ## Disclaimer
 
 Discord is trademark of Discord Inc. and solely mentioned for the sake of descriptivity. Mention of it does not imply any affiliation with or endorsement by Discord Inc.
