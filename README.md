@@ -4,65 +4,41 @@ An utility selfbot for Discord!
 
 ## Installation
 
-### Binaries
+This is now designed to run on Linux only, more specifically a VPS. Python (duh) and libvips are required
 
-Binaries are avaliable only for Windows because getting gato to work using the latest commit is very easy on Linux. Just look at the **Latest commit** section below.
-
-Binaries can be found in the [releases](https://github.com/s-liwka/gato/releases) page.
-
-#### Why is my antivirus detecting it as malware??
-
-Because i used a tool called pyinstaller to package it. A lot of skids also use it to package their shitty grabbers and rats, and now antiviruses will just take anything packaged by pyinstaller as malware. (especially if the code mentions discord, as a lot of those also use discord as a "control panel")
-
-
-### Latest commit
-Prerequisites: python 3.11, git
-
-
-#### Linux
-
-Prerequisites can be installed using your package manager. eg.
-```sh
-pacman -S python git
+Ubuntu:
+```
+apt install libvips python3 git python3.11-venv
 ```
 
-Download setup.sh from scripts and run it as root. (with sudo, doas etc)
+Arch:
+```
+pacman -S libvips python git
+```
 
-#### Windows
+Clone the repo:
+```
+git clone https://github.com/s-liwka/gato.git
+```
 
-[git](https://git-scm.com/download/win) - **when installing, select the add git to path option!**
+Make a venv and install the requirements
+```
+cd gato
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+```
 
-[python](https://www.python.org/downloads/) - **also select add to path!**
+Configure the selfbot:
+```
+python3 config.py configurator
+```
 
-Download setup.bat from scripts and run it.
+Run:
+```
+python3 bot.py
+```
 
-## Usage
-
-### Linux
-
-A desktop file should've been created, and you should be able to find Gato using your launcher.
-You can also run it from the terminal using `gato-gui`. If you wish to use the CLI version then run `gato-cli --help`
-
-If you cant find it in your launcher, try copying over the .desktop file from resources, and pasting it into `/usr/share/applications`
-
-### Windows
-
-If you downloaded the binary, then double click it. **DO NOT MOVE THE BINARY AWAY FROM THE FOLDER.**
-
-If you used the setup.bat script, then a shortcut on your desktop should've been created. The files have been installed at `C:\Program Files\gato`. You can run the CLI by cd'ing into that directory and running `python cli.py`
-
-
-## Updating
-
-### Linux
-
-Run `gato-update` as root.
-
-### Windows
-
-If you downloaded the binary then you need to redownload it every new release.
-
-If you used setup.bat then go to `C:\Program Files\gato\scripts` and run the `gato-update.bat` script.
 
 ## Disclaimer
 
